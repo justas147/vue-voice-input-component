@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { HelloWorld } from '../';
+import { VoiceButton } from '../';
 </script>
 
 <template>
@@ -11,7 +11,9 @@ import { HelloWorld } from '../';
       <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
     </a>
   </div>
-  <HelloWorld text="Vite + Vue" />
+  <div class="container">
+    <VoiceButton apiEndpoint="http://localhost:3000/upload"/>
+  </div>
 </template>
 
 <style scoped>
@@ -26,5 +28,10 @@ import { HelloWorld } from '../';
 }
 .logo.vue:hover {
   filter: drop-shadow(0 0 2em #42b883aa);
+}
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>

@@ -1,3 +1,3 @@
-import HelloWorld from './components/HelloWorld.vue';
+import VoiceButton from './components/VoiceButton.vue';
 
-export { HelloWorld };
+export { VoiceButton };
