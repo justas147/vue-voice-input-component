@@ -1,5 +1,3 @@
-import axios from 'axios'
-
 export async function uploadAudioToAPI(
   audioBlob: Blob, 
   apiUrl: string | undefined,
@@ -17,12 +15,13 @@ export async function uploadAudioToAPI(
   try {
     console.log(`sending audio to server at ${apiUrl}`)
 
-    const response = await axios.post(apiUrl, fd, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      body: fd
     })
-    // transcription.value = response.data.transcription
+
+    const transformedResponse = await response.json();
+    console.log(transformedResponse);
 
     return true;
   } catch (error) {

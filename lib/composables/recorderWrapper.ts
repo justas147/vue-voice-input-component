@@ -5,6 +5,9 @@ export function mediaRecorderWrapper() {
   const isRecordingRef = ref<boolean>(false)
   const audioChunks = ref<Blob[]>([])
   const audioBlobRef = ref<Blob | null>(null)
+
+  const duration = ref<number>(0)
+
   let stopPromiseResolve: (() => void) | null = null;
 
   const isRecording = () => isRecordingRef.value
@@ -26,6 +29,8 @@ export function mediaRecorderWrapper() {
     mediaRecorder.value = new MediaRecorder(stream)
 
     mediaRecorder.value.ondataavailable = (event) => {
+      console.log('data available')
+      console.log(event)
       audioChunks.value.push(event.data)
     }
 
@@ -39,7 +44,7 @@ export function mediaRecorderWrapper() {
     }
   }
 
-  const startRecording = () => {
+  const startRecording = (maxDuration: number) => {
     if (
       !mediaRecorder.value ||
       isRecordingRef.value ||
@@ -48,6 +53,15 @@ export function mediaRecorderWrapper() {
       console.error('MediaRecorder is not prepared or already recording')
       return
     }
+
+    setTimeout(() => {
+      if (
+        isRecordingRef.value ||
+        mediaRecorder.value?.state !== 'inactive'
+      ) {
+        stopRecording()
+      }
+    }, maxDuration)
 
     mediaRecorder.value.start()
     isRecordingRef.value = true

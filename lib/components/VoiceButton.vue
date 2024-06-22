@@ -3,10 +3,16 @@ import { ref } from 'vue'
 import { uploadAudioToAPI } from '../composables/uploader'
 import { mediaRecorderWrapper } from '../composables/recorderWrapper'
 
-const props = defineProps<{ 
-  text?: string,
-  apiEndpoint?: string, 
-}>()
+const props = defineProps({
+  text: { type: String, default: 'Start Recording' },
+  maxDuration: { type: Number, default: 5000, required: false },
+  color: { type: String, default: '#1b1b32', required: false },
+  apiEndpoint: { type: String, required: true },
+  token: { type: String, required: false },
+  formDataTag: { type: String, default: 'audio', required: false }
+});
+
+const emits = defineEmits(['transcription'])
 
 const { 
   prepareRecording, 
@@ -15,16 +21,23 @@ const {
   getAudioBlob, 
   isRecording 
 } = mediaRecorderWrapper()
-const transcription = ref('')
 
 async function startRec() {
   console.log('recording started')
 
+  const constraints = {
+    video: false,
+    audio: {
+      channelCount: 1,
+      echoCancellation: false,
+    },
+  };
+
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
       prepareRecording(stream)
-      startRecording()
+      startRecording(props.maxDuration)
     } catch (error) {
       console.error(error)
     }
@@ -55,7 +68,6 @@ async function stopRec() {
     <button class="btn-cta" @click="startRec" :disabled="isRecording()">Start Recording</button>
   </template>
   <button @click="stopRec" :disabled="!isRecording()">Stop Recording</button>
-  <p v-if="transcription">Transcription: {{ transcription }}</p>
 </template>
 
 <style scoped>

@@ -3,14 +3,6 @@ import { VoiceButton } from '../';
 </script>
 
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
   <div class="container">
     <VoiceButton apiEndpoint="http://localhost:3000/upload"/>
   </div>
