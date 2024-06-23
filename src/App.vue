@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { VoiceButton } from '../';
+import { VoiceTranscriptComponent } from '../';
 </script>
 
 <template>
   <div>
-    <VoiceButton apiEndpoint="http://localhost:3000/upload"/>
+    <VoiceTranscriptComponent/>
   </div>
 </template>
 

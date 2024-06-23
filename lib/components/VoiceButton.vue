@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { uploadAudioToAPI } from '../composables/uploader'
 import { mediaRecorderWrapper } from '../composables/recorderWrapper'
 import microphoneUrl from '../assets/microphone.svg'
+import { emit } from 'process';
 
 const props = defineProps({
   text: { type: String, default: 'Start Recording' },
@@ -13,7 +13,7 @@ const props = defineProps({
   formDataTag: { type: String, default: 'audio', required: false }
 });
 
-const emits = defineEmits(['transcription'])
+const emits = defineEmits(['getTranscript'])
 
 const { 
   prepareRecording, 
@@ -56,9 +56,13 @@ async function stopRec() {
       return
     }
 
-    if (props.apiEndpoint) {
-      const response = await uploadAudioToAPI(audioBlob, props.apiEndpoint)
+    if (!props.apiEndpoint) {
+      console.error('No API endpoint provided')
+      return
     }
+
+    const transformedResponse = await uploadAudioToAPI(audioBlob, props.apiEndpoint)
+    emits('getTranscript', transformedResponse)
   } catch (error) {
     console.error('Error during recording stop:', error)
     return
@@ -72,6 +76,8 @@ function toggleRecording() {
     startRec()
   }
 }
+
+// TODO: clean up the styling of button
 </script>
 
 <template>
