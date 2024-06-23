@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { uploadAudioToAPI } from '../composables/uploader'
 import { mediaRecorderWrapper } from '../composables/recorderWrapper'
+import microphoneUrl from '../assets/microphone.svg'
 
 const props = defineProps({
   text: { type: String, default: 'Start Recording' },
@@ -63,46 +64,56 @@ async function stopRec() {
     return
   }
 }
+
+function toggleRecording() {
+  if (isRecording()) {
+    stopRec()
+  } else {
+    startRec()
+  }
+}
 </script>
 
 <template>
-  <template v-if="text">
-    <button class="btn-cta" @click="startRec" :disabled="isRecording()">{{ text }}</button>
-  </template>
-  <template v-else>
-    <button class="btn-cta" @click="startRec" :disabled="isRecording()">Start Recording</button>
-  </template>
-  <button @click="stopRec" :disabled="!isRecording()">Stop Recording</button>
+  <button
+    class = "btn-cta"
+    :class="isRecording() ? 'record-start' : ''"
+    @click="toggleRecording"
+  >
+    <img 
+      :src="microphoneUrl" 
+      alt="microphone"  
+    />
+  </button>
 </template>
 
 <style scoped>
-.btn-cta {
-  background-color: #d0d0d5;
-  border-width: 3px;
-  border-color: #1b1b32;
-  border-radius: 0;
-  border-style: solid;
-  color: #1b1b32;
-  display: block;
-  margin-bottom: 0;
-  font-weight: normal;
-  text-align: center;
-  -ms-touch-action: manipulation;
-  touch-action: manipulation;
-  cursor: pointer;
-  white-space: nowrap;
-  padding: 6px 12px;
-  font-size: 18px;
-  line-height: 1.42857143;
+.record-start {
+  background-color: red;
 }
 
-.btn-cta:active:hover,
-.btn-cta:focus,
-.btn-cta:hover {
-  background-color: #1b1b32;
+.record-stop {
+  background-color: #d0d0d5;
+}
+
+.btn-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 50px;
+  height: 50px;
+
   border-width: 3px;
-  border-color: #000;
-  background-image: none;
-  color: #f5f6f7;
+  border-radius: 50%;
+  border-style: solid;
+
+  text-align: center;
+
+  -ms-touch-action: manipulation;
+  touch-action: manipulation;
+
+  cursor: pointer;
+  white-space: nowrap;
 }
 </style>
