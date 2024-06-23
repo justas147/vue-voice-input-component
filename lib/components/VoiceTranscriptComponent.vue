@@ -12,13 +12,31 @@ const getTranscript = (transcript: string) => {
 }
 </script>
 <template>
-  <div>
+  <div class="container">
     <VoiceButton 
+      class="button"
       apiEndpoint="http://localhost:3000/upload" 
       @getTranscript="getTranscript"
     />
-    <VoiceTranscript 
+    <VoiceTranscript
+      class="transcript" 
       :transcription="voiceTranscript"
     />
   </div>
 </template>
+
+<style scoped>
+.container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.button {
+  margin-right: 10px;
+}
+
+.transcript {
+  border: 1px solid black;
+}
+</style>

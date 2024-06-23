@@ -2,7 +2,6 @@
 import { uploadAudioToAPI } from '../composables/uploader'
 import { mediaRecorderWrapper } from '../composables/recorderWrapper'
 import microphoneUrl from '../assets/microphone.svg'
-import { emit } from 'process';
 
 const props = defineProps({
   text: { type: String, default: 'Start Recording' },
@@ -19,8 +18,7 @@ const {
   prepareRecording, 
   startRecording, 
   stopRecording, 
-  getAudioBlob, 
-  isRecording 
+  isRecording
 } = mediaRecorderWrapper()
 
 async function startRec() {
