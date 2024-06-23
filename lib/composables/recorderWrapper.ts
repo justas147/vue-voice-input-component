@@ -2,93 +2,80 @@ import { onMounted, onUnmounted, ref } from 'vue'
 
 export function mediaRecorderWrapper() {
   const mediaRecorder = ref<MediaRecorder | null>(null)
+  const mediaStream = ref<MediaStream | null>(null)
   const isRecordingRef = ref<boolean>(false)
   const audioChunks = ref<Blob[]>([])
   const audioBlobRef = ref<Blob | null>(null)
 
-  const duration = ref<number>(0)
-
-  let stopPromiseResolve: (() => void) | null = null;
-
   const isRecording = () => isRecordingRef.value
 
-  const getAudioBlob = (): Promise<Blob | null> => {
-    if (!isRecordingRef.value && audioBlobRef.value) {
-      return Promise.resolve(audioBlobRef.value);
-    }
-
-    return new Promise((resolve) => {
-      stopPromiseResolve = () => {
-        resolve(audioBlobRef.value);
-        stopPromiseResolve = null;
-      }
-    })
-  }
-
   const prepareRecording = (stream: any) => {
+    if (!stream) {
+      throw new Error('MediaStream is not provided')
+    }
+
+    mediaStream.value = stream
     mediaRecorder.value = new MediaRecorder(stream)
-
-    mediaRecorder.value.ondataavailable = (event) => {
-      console.log('data available')
-      console.log(event)
-      audioChunks.value.push(event.data)
-    }
-
-    mediaRecorder.value.onstop = () => {
-      const audioBlob = new Blob(audioChunks.value, { type: 'audio/wav' })
-      audioChunks.value = []
-      audioBlobRef.value = audioBlob
-      if (stopPromiseResolve) {
-        stopPromiseResolve();
-      }
-    }
+    mediaRecorder.value.ondataavailable = onDataAvailableHandler
   }
 
   const startRecording = (maxDuration: number) => {
     if (
       !mediaRecorder.value ||
-      isRecordingRef.value ||
-      mediaRecorder.value.state === 'recording'
+      (isRecordingRef.value || mediaRecorder.value.state === 'recording')
     ) {
-      console.error('MediaRecorder is not prepared or already recording')
-      return
+      throw new Error('MediaRecorder is not prepared or already recording')
     }
 
-    setTimeout(() => {
-      if (
-        isRecordingRef.value ||
-        mediaRecorder.value?.state !== 'inactive'
-      ) {
-        stopRecording()
-      }
-    }, maxDuration)
-
-    mediaRecorder.value.start()
+    console.log('starting recording')
+    mediaRecorder.value.start();
     isRecordingRef.value = true
   }
 
-  const stopRecording = () => {
+  const stopRecording = (): Blob | null => {
     if (
       !mediaRecorder.value || 
       !isRecordingRef.value || 
       mediaRecorder.value.state === 'inactive' 
     ) {
-      console.error('MediaRecorder is not prepared or already stopped')
-      return
+      throw new Error('MediaRecorder is not prepared or not recording')
+    }
+    
+    mediaRecorder.value?.stop()
+    mediaStream.value?.getTracks().forEach((track: MediaStreamTrack) => {
+      track.stop()
+    });
+
+    const audioBlob = new Blob(audioChunks.value, { type: 'audio/ogg; codecs=opus' })
+    audioBlobRef.value = audioBlob
+
+    isRecordingRef.value = false
+    audioChunks.value = []
+
+    return audioBlob;
+  }
+
+  const getAudioBlob = (): Blob | null => {
+    if (!isRecordingRef.value && audioBlobRef.value) {
+      return audioBlobRef.value
     }
 
-    mediaRecorder.value?.stop()
-    isRecordingRef.value = false
+    return null;
+  }
+
+  const onDataAvailableHandler = (event: BlobEvent) => {
+    audioChunks.value.push(event.data)
   }
 
   onMounted(() => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      console.warn('Media Devices are not supported from your browser.')
-      return
+      throw new Error('Media Devices are not supported from your browser.')
     }
 
     audioChunks.value = []
     audioBlobRef.value = null
+    mediaRecorder.value = null
+    mediaStream.value = null
   })
 
   onUnmounted(() => {
@@ -98,6 +85,8 @@ export function mediaRecorderWrapper() {
 
     audioChunks.value = []
     audioBlobRef.value = null
+    mediaRecorder.value = null
+    mediaStream.value = null
   })
 
   return { 

@@ -23,7 +23,10 @@ const {
 } = mediaRecorderWrapper()
 
 async function startRec() {
-  console.log('recording started')
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    console.error('getUserMedia is not supported')
+    return
+  }
 
   const constraints = {
     video: false,
@@ -33,29 +36,31 @@ async function startRec() {
     },
   };
 
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      prepareRecording(stream)
-      startRecording(props.maxDuration)
-    } catch (error) {
-      console.error(error)
-    }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia(constraints)
+    prepareRecording(stream)
+    startRecording(props.maxDuration)
+  } catch (error) {
+    console.error('Error during recording start:', error)
+    return
   }
 }
 
 async function stopRec() {
-  console.log('recording stopped')
-  stopRecording()
-  const audioBlob: Blob | null = await getAudioBlob();
+  try {
+    const audioBlob: Blob | null = stopRecording();
 
-  if (!audioBlob) {
-    console.error('No audio blob found')
+    if (!audioBlob) {
+      console.error('No audio blob found')
+      return
+    }
+
+    if (props.apiEndpoint) {
+      const response = await uploadAudioToAPI(audioBlob, props.apiEndpoint)
+    }
+  } catch (error) {
+    console.error('Error during recording stop:', error)
     return
-  }
-
-  if (props.apiEndpoint) {
-    const response = await uploadAudioToAPI(audioBlob, props.apiEndpoint)
   }
 }
 </script>
