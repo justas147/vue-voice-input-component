@@ -27,12 +27,11 @@ export function mediaRecorderWrapper() {
       throw new Error('MediaRecorder is not prepared or already recording')
     }
 
-    console.log('starting recording')
-    mediaRecorder.value.start();
+    mediaRecorder.value.start()
     isRecordingRef.value = true
   }
 
-  const stopRecording = (): Blob | null => {
+  const stopRecording = (blobType: string = 'audio/webm;codecs=opus') => {
     if (
       !mediaRecorder.value || 
       !isRecordingRef.value || 
@@ -46,7 +45,9 @@ export function mediaRecorderWrapper() {
       track.stop()
     });
 
-    const audioBlob = new Blob(audioChunks.value, { type: 'audio/ogg; codecs=opus' })
+    const audioBlob = new Blob(audioChunks.value, {
+      type: blobType,
+    })
     audioBlobRef.value = audioBlob
 
     isRecordingRef.value = false

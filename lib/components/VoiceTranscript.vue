@@ -1,19 +1,23 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 const props = defineProps({
-  transcription: { type: String, default: '' },
-  typeSpeed: { type: Number, default: 50 },
+  transcription: { type: String, required: false, default: '' },
+  typeSpeed: { type: Number, required: false, default: 50 },
 });
 
 const displayText = ref('');
+const interval = ref<NodeJS.Timeout | null>(null);
 
 watch(
   () => props.transcription, 
   (newVal: string | null, oldVal: string | null) => {
-    console.log('newVal:', newVal);
-    console.log('oldVal:', oldVal);
     if (newVal === '') return;
+
+    if (interval.value) {
+      clearInterval(interval.value);
+    }
+
     displayText.value = '';
     typeText();
   }
@@ -23,17 +27,20 @@ onMounted(() => {
   displayText.value = '';
 });
 
+onUnmounted(() => {
+  displayText.value = '';
+});
+
 function typeText() {
   let index = 0;
   const text = props.transcription;
   const speed = props.typeSpeed;
 
-  const interval = setInterval(() => {
+  interval.value = setInterval(() => {
     if (index >= text.length) {
-      clearInterval(interval);
+      clearInterval(interval.value!);
     } else {
       displayText.value += text[index];
-      console.log(displayText.value);
       index++;
     }
   }, speed);
@@ -46,4 +53,8 @@ function typeText() {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+p {
+  margin: 0;
+}
+</style>

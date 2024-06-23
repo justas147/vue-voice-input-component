@@ -4,15 +4,19 @@ import { mediaRecorderWrapper } from '../composables/recorderWrapper'
 import microphoneUrl from '../assets/microphone.svg'
 
 const props = defineProps({
-  text: { type: String, default: 'Start Recording' },
-  maxDuration: { type: Number, default: 5000, required: false },
-  color: { type: String, default: '#1b1b32', required: false },
+  maxDuration: { type: Number, required: false, default: 5000 },
   apiEndpoint: { type: String, required: true },
-  token: { type: String, required: false },
-  formDataTag: { type: String, default: 'audio', required: false }
+  apiHeaders: { type: Object, required: false, default: () => (undefined) },
+  formDataTag: { type: String, required: false, default: 'audio' },
+  audioContraints: { type: Object, required: false, default: () => ({
+    channelCount: 1,
+    echoCancellation: false,
+    sampleRate: 44100,
+  }) },
+  blobType: { type: String, required: false, default: 'audio/webm;codecs=opus' },
 });
 
-const emits = defineEmits(['getTranscript'])
+const emits = defineEmits(['recordingStop', 'recordingStart'])
 
 const { 
   prepareRecording, 
@@ -27,18 +31,21 @@ async function startRec() {
     return
   }
 
+  if (!MediaRecorder.isTypeSupported(props.blobType)) {
+    console.error('Blob type is not supported')
+    return
+  }
+
   const constraints = {
     video: false,
-    audio: {
-      channelCount: 1,
-      echoCancellation: false,
-    },
+    audio: props.audioContraints,
   };
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia(constraints)
     prepareRecording(stream)
     startRecording(props.maxDuration)
+    emits('recordingStart')
   } catch (error) {
     console.error('Error during recording start:', error)
     return
@@ -47,7 +54,7 @@ async function startRec() {
 
 async function stopRec() {
   try {
-    const audioBlob: Blob | null = stopRecording();
+    const audioBlob: Blob | null = stopRecording(props.blobType);
 
     if (!audioBlob) {
       console.error('No audio blob found')
@@ -59,8 +66,14 @@ async function stopRec() {
       return
     }
 
-    const transformedResponse = await uploadAudioToAPI(audioBlob, props.apiEndpoint)
-    emits('getTranscript', transformedResponse)
+    const transformedResponse = await uploadAudioToAPI(
+      audioBlob,
+      props.audioContraints,
+      props.apiEndpoint, 
+      props.apiHeaders,
+      props.formDataTag
+    )
+    emits('recordingStop', transformedResponse)
   } catch (error) {
     console.error('Error during recording stop:', error)
     return
@@ -74,8 +87,6 @@ function toggleRecording() {
     startRec()
   }
 }
-
-// TODO: clean up the styling of button
 </script>
 
 <template>

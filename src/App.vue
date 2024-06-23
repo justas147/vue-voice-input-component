@@ -3,9 +3,13 @@ import { VoiceTranscriptComponent } from '../';
 </script>
 
 <template>
-  <div>
-    <VoiceTranscriptComponent/>
+  <div class="container">
+    <VoiceTranscriptComponent apiEndpoint="http://localhost:3000/upload"/>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.container {
+  width: 500px;
+}
+</style>
