@@ -1,13 +1,22 @@
 {
   "name": "vue-voice-input-component",
-  "private": true,
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/justas147/vue-voice-input-component"
+  },
   "type": "module",
   "files": [
     "dist"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --emitDeclarationOnly -p ./tsconfig-build.json && vite build",
@@ -23,6 +32,7 @@
   },
   "keywords": [
     "vue",
+    "vue3",
     "voice",
     "input",
     "component"
