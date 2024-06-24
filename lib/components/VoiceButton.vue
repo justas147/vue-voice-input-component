@@ -43,6 +43,7 @@ async function startRec() {
     };
 
     const stream = await navigator.mediaDevices.getUserMedia(constraints)
+    mediaStream.value = stream
     mediaRecorder.value = new MediaRecorder(stream)
     mediaRecorder.value.ondataavailable = onDataAvailableHandler
     mediaRecorder.value.onstop = onStopHandler
