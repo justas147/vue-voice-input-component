@@ -2,8 +2,9 @@
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 const props = defineProps({
-  transcription: { type: String, required: false, default: '' },
+  transcription: { type: String, required: false, default: () => ''},
   typeSpeed: { type: Number, required: false, default: 50 },
+  singleWordLimit: { type: Number, required: false, default: 1000 }
 });
 
 const displayText = ref('');
@@ -12,7 +13,9 @@ const interval = ref<NodeJS.Timeout | null>(null);
 watch(
   () => props.transcription, 
   (newVal: string | null, oldVal: string | null) => {
-    if (newVal === '') return;
+    if (typeof newVal !== 'string') return;
+    if (newVal === "") return;
+    if (!isValidTranscription()) return;
 
     if (interval.value) {
       clearInterval(interval.value);
@@ -30,6 +33,25 @@ onMounted(() => {
 onUnmounted(() => {
   displayText.value = '';
 });
+
+function isValidTranscription() {
+  const text = props.transcription;
+  console.log(text);
+  console.log(typeof text);
+  const words = text.split(' ');
+
+  if (words.length === 1 && words[0] === '') {
+    return false;
+  }
+
+  for (const word of words) {
+    if (word.length > props.singleWordLimit) {
+      return false;
+    }
+  }
+
+  return props.transcription !== '';
+}
 
 function typeText() {
   let index = 0;

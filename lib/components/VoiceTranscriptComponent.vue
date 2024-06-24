@@ -43,8 +43,8 @@ const clearTranscript = () => {
         :formDataTag="props.formDataTag"
         :audioContraints="props.audioContraints"
         :blobType="props.blobType"
-        @recordingStop="getTranscript"
         @recordingStart="clearTranscript"
+        @recordingStop="getTranscript"
       />
     </div>
     <VoiceTranscript

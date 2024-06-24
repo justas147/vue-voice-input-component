@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { uploadAudioToAPI } from '../composables/uploader'
-import { mediaRecorderWrapper } from '../composables/recorderWrapper'
 import microphoneUrl from '../assets/microphone.svg'
+import { onMounted, onUnmounted, ref } from 'vue';
+import { uploadAudioToAPI } from '../composables/uploader'
 
 const props = defineProps({
   maxDuration: { type: Number, required: false, default: 5000 },
@@ -11,40 +11,43 @@ const props = defineProps({
   audioContraints: { type: Object, required: false, default: () => ({
     channelCount: 1,
     echoCancellation: false,
-    sampleRate: 44100,
+    sampleRate: 16000,
   }) },
   blobType: { type: String, required: false, default: 'audio/webm;codecs=opus' },
 });
 
+const audioBlobRef = ref<Blob | null>(null)
+const isRecordingRef = ref<boolean>(false)
+const audioChunks = ref<Blob[]>([])
+const mediaStream = ref<MediaStream | null>(null)
+const mediaRecorder = ref<MediaRecorder | null>(null)
+
 const emits = defineEmits(['recordingStop', 'recordingStart'])
 
-const { 
-  prepareRecording, 
-  startRecording, 
-  stopRecording, 
-  isRecording
-} = mediaRecorderWrapper()
+const isRecording = () => isRecordingRef.value
 
 async function startRec() {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    console.error('getUserMedia is not supported')
-    return
+  if (
+    isRecordingRef.value ||
+    (mediaRecorder.value && mediaRecorder.value.state === 'recording')
+  ) {
+    throw new Error('MediaRecorder is not prepared or already recording')
   }
-
-  if (!MediaRecorder.isTypeSupported(props.blobType)) {
-    console.error('Blob type is not supported')
-    return
-  }
-
-  const constraints = {
-    video: false,
-    audio: props.audioContraints,
-  };
 
   try {
+    const constraints = {
+      video: false,
+      audio: props.audioContraints,
+    };
+
     const stream = await navigator.mediaDevices.getUserMedia(constraints)
-    prepareRecording(stream)
-    startRecording(props.maxDuration)
+    mediaRecorder.value = new MediaRecorder(stream)
+    mediaRecorder.value.ondataavailable = onDataAvailableHandler
+    mediaRecorder.value.onstop = onStopHandler
+  
+    mediaRecorder.value.start()
+    isRecordingRef.value = true
+    audioBlobRef.value = null
     emits('recordingStart')
   } catch (error) {
     console.error('Error during recording start:', error)
@@ -53,27 +56,19 @@ async function startRec() {
 }
 
 async function stopRec() {
+  if (
+    !mediaRecorder.value || 
+    !isRecordingRef.value || 
+    mediaRecorder.value.state === 'inactive' 
+  ) {
+    throw new Error('MediaRecorder is not prepared or not recording')
+  }
+
   try {
-    const audioBlob: Blob | null = stopRecording(props.blobType);
-
-    if (!audioBlob) {
-      console.error('No audio blob found')
-      return
-    }
-
-    if (!props.apiEndpoint) {
-      console.error('No API endpoint provided')
-      return
-    }
-
-    const transformedResponse = await uploadAudioToAPI(
-      audioBlob,
-      props.audioContraints,
-      props.apiEndpoint, 
-      props.apiHeaders,
-      props.formDataTag
-    )
-    emits('recordingStop', transformedResponse)
+    mediaRecorder.value?.stop()
+    mediaStream.value?.getTracks().forEach((track: MediaStreamTrack) => {
+      track.stop()
+    });
   } catch (error) {
     console.error('Error during recording stop:', error)
     return
@@ -87,6 +82,63 @@ function toggleRecording() {
     startRec()
   }
 }
+
+const onDataAvailableHandler = (event: BlobEvent) => {
+  audioChunks.value.push(event.data)
+}
+
+const onStopHandler = async (event: Event) => {
+  const audioBlob = new Blob(audioChunks.value, {
+    type: props.blobType,
+  })
+
+  audioBlobRef.value = audioBlob
+  isRecordingRef.value = false
+  audioChunks.value = []
+
+  const response = await uploadAudioToAPI(
+    audioBlob,
+    props.audioContraints,
+    props.apiEndpoint,
+    props.apiHeaders,
+    props.formDataTag,
+  )
+
+  emits('recordingStop', response)
+}
+
+onMounted(async () => {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    throw new Error('getUserMedia is not supported')
+  }
+
+  if (!props.apiEndpoint) {
+    throw new Error('No API endpoint provided')
+  }
+
+  if (!MediaRecorder.isTypeSupported(props.blobType)) {
+    console.error('Blob type is not supported')
+    return
+  }
+
+  audioChunks.value = []
+  audioBlobRef.value = null
+  mediaRecorder.value = null
+  mediaStream.value = null
+  isRecordingRef.value = false
+})
+
+onUnmounted(() => {
+  if (isRecordingRef.value) {
+    stopRec()
+  }
+
+  audioChunks.value = []
+  audioBlobRef.value = null
+  mediaRecorder.value = null
+  mediaStream.value = null
+  isRecordingRef.value = false
+})
 </script>
 
 <template>
