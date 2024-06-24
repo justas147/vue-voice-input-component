@@ -1,6 +1,6 @@
 # Vue voice input component
 
-This component adds a button that allows users to record audio through their microphone using Web APIs‘ [MediaRecorder interface](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder) and send the audio data to a specified backend server URL for processing. It also provied a component to display the response or other input with a „typing effect“ (similar to chatGPT).
+This component adds a button that allows users to record audio through their microphone using Web APIs‘ [MediaRecorder interface](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder) and send the audio data to a specified backend server URL for processing. It also provides a component to display the response or other input with a „typing effect“ (similar to chatGPT).
 
 ## Features
 
