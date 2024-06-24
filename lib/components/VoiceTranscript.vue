@@ -36,8 +36,6 @@ onUnmounted(() => {
 
 function isValidTranscription() {
   const text = props.transcription;
-  console.log(text);
-  console.log(typeof text);
   const words = text.split(' ');
 
   if (words.length === 1 && words[0] === '') {

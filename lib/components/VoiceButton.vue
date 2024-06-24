@@ -14,6 +14,7 @@ const props = defineProps({
     sampleRate: 16000,
   }) },
   blobType: { type: String, required: false, default: 'audio/webm;codecs=opus' },
+  timeslice: { type: Number, required: false, default: 1000 },
 });
 
 const audioBlobRef = ref<Blob | null>(null)
@@ -21,6 +22,7 @@ const isRecordingRef = ref<boolean>(false)
 const audioChunks = ref<Blob[]>([])
 const mediaStream = ref<MediaStream | null>(null)
 const mediaRecorder = ref<MediaRecorder | null>(null)
+const timesliceLimit = ref<number>(0)
 
 const emits = defineEmits(['recordingStop', 'recordingStart'])
 
@@ -44,8 +46,9 @@ async function startRec() {
     mediaRecorder.value = new MediaRecorder(stream)
     mediaRecorder.value.ondataavailable = onDataAvailableHandler
     mediaRecorder.value.onstop = onStopHandler
-  
-    mediaRecorder.value.start()
+    mediaRecorder.value.start(props.timeslice)
+
+    setTimeSliceLimit()
     isRecordingRef.value = true
     audioBlobRef.value = null
     emits('recordingStart')
@@ -55,11 +58,11 @@ async function startRec() {
   }
 }
 
-async function stopRec() {
+function stopRec() {
   if (
     !mediaRecorder.value || 
     !isRecordingRef.value || 
-    mediaRecorder.value.state === 'inactive' 
+    mediaRecorder.value?.state === 'inactive' 
   ) {
     throw new Error('MediaRecorder is not prepared or not recording')
   }
@@ -83,7 +86,25 @@ function toggleRecording() {
   }
 }
 
+const setTimeSliceLimit = () => {
+  const limit = props.maxDuration / props.timeslice
+
+  if (limit < 1) {
+    timesliceLimit.value = 1
+  }
+
+  timesliceLimit.value = Math.floor(limit)
+}
+
 const onDataAvailableHandler = (event: BlobEvent) => {
+  if (
+    audioChunks.value.length >= timesliceLimit.value && 
+    mediaRecorder.value?.state === 'recording'
+  ) {
+    stopRec()
+    return
+  }
+
   audioChunks.value.push(event.data)
 }
 
