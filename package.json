@@ -37,6 +37,7 @@
     "input",
     "component"
   ],
+  "author": "Justas Radkevičius <jradkevicius@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "vue": "^3.4.21"
