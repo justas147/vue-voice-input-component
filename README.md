@@ -73,7 +73,7 @@ import { VoiceTranscriptComponent } from 'vue-voice-input-component';
 `VoiceButton` component properties:
 
 | Name | Type | Optional | Default value | Description |
-| -----|------|----------|---------------|-------------|
+|------|------|----------|---------------|-------------|
 | apiEndpoint | String | False | - | API URL where the audio binary data is sent |
 | maxDuration | Number | True | 5000ms | Maximum recording duration |
 | apiHeaders | Object | True | undefined | Custom HTTP request headers that are added to API request |
@@ -81,6 +81,13 @@ import { VoiceTranscriptComponent } from 'vue-voice-input-component';
 | audioContraints | Object | True | {channelCount: 1, echoCancellation: false, sampleRate: 16000} | Audio stream constraints. More options can be found [here](https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints#instance_properties_of_audio_tracks) |
 | blobType | String | True | audio/webm;codecs=opus | The MIME type of blob in which the audio chucks are stored and passed to backend |
 | timeslice | Number | True | 1000ms | The size of timeslices in milliseconds in which the audio chucks are saved. Note: the max duration is dividated by timeslice to calculate how many timeslices to record so take that into account when setting both properties |
+
+Here is the list of emited events:
+
+| Name | Properties | Description |
+|------|------------|-------------|
+| recordingStart | - | Emits event when the recording is started |
+| recordingStop | response | Emits event when recording is stopped with the API response |
 
 `VoiceTransript` component properties:
 
@@ -102,4 +109,4 @@ Here are a few screenshots of the component added to a empty Vue app:
 
 ![button and transcript after recording](docs/recorded.png)
 
-Components have minimal styling that could be change with custom classes. However, it will be updated in the future.
+Components have minimal styling that could be changed with custom classes. However, it will be updated in the future.
