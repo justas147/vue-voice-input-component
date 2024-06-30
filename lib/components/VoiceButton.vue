@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import microphoneUrl from '../assets/microphone.svg'
 import { onMounted, onUnmounted, ref } from 'vue';
-import { uploadAudioToAPI } from '../composables/uploader'
+import io from 'socket.io-client';
 
 const props = defineProps({
   maxDuration: { type: Number, required: false, default: 5000 },
@@ -17,9 +17,9 @@ const props = defineProps({
   timeslice: { type: Number, required: false, default: 1000 },
 });
 
-const audioBlobRef = ref<Blob | null>(null)
+const socket = ref<any>(undefined)
+const socketData = ref<string>('')
 const isRecordingRef = ref<boolean>(false)
-const audioChunks = ref<Blob[]>([])
 const mediaStream = ref<MediaStream | null>(null)
 const mediaRecorder = ref<MediaRecorder | null>(null)
 const timesliceLimit = ref<number>(0)
@@ -42,6 +42,9 @@ async function startRec() {
       audio: props.audioContraints,
     };
 
+    socket.value = io(props.apiEndpoint)
+    socket.value.on('message', onMessageHandler)
+
     const stream = await navigator.mediaDevices.getUserMedia(constraints)
     mediaStream.value = stream
     mediaRecorder.value = new MediaRecorder(stream)
@@ -51,7 +54,7 @@ async function startRec() {
 
     setTimeSliceLimit()
     isRecordingRef.value = true
-    audioBlobRef.value = null
+    
     emits('recordingStart')
   } catch (error) {
     console.error('Error during recording start:', error)
@@ -98,35 +101,19 @@ const setTimeSliceLimit = () => {
 }
 
 const onDataAvailableHandler = (event: BlobEvent) => {
-  if (
-    audioChunks.value.length >= timesliceLimit.value && 
-    mediaRecorder.value?.state === 'recording'
-  ) {
-    stopRec()
-    return
-  }
-
-  audioChunks.value.push(event.data)
+  socket.value?.emit('audioChunk', event.data)
 }
 
 const onStopHandler = async (event: Event) => {
-  const audioBlob = new Blob(audioChunks.value, {
-    type: props.blobType,
-  })
-
-  audioBlobRef.value = audioBlob
   isRecordingRef.value = false
-  audioChunks.value = []
 
-  const response = await uploadAudioToAPI(
-    audioBlob,
-    props.audioContraints,
-    props.apiEndpoint,
-    props.apiHeaders,
-    props.formDataTag,
-  )
+  socket.value?.close()
+  emits('recordingStop', socketData.value)
+}
 
-  emits('recordingStop', response)
+const onMessageHandler = (event: MessageEvent) => {
+  socketData.value = socketData.value + event.data
+  console.log('Message from server:', event.data)
 }
 
 onMounted(async () => {
@@ -143,8 +130,7 @@ onMounted(async () => {
     return
   }
 
-  audioChunks.value = []
-  audioBlobRef.value = null
+  socket.value = undefined
   mediaRecorder.value = null
   mediaStream.value = null
   isRecordingRef.value = false
@@ -155,8 +141,7 @@ onUnmounted(() => {
     stopRec()
   }
 
-  audioChunks.value = []
-  audioBlobRef.value = null
+  socket.value = undefined
   mediaRecorder.value = null
   mediaStream.value = null
   isRecordingRef.value = false

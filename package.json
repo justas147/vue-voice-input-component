@@ -40,10 +40,12 @@
   "author": "Justas Radkevičius <jradkevicius@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "socket.io-client": "^4.7.5",
     "vue": "^3.4.21"
   },
   "devDependencies": {
     "@types/node": "^20.12.13",
+    "@types/socket.io-client": "^3.0.0",
     "@vitejs/plugin-vue": "^5.0.4",
     "glob": "^10.4.1",
     "typescript": "^5.2.2",

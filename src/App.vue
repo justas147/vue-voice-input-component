@@ -4,7 +4,7 @@ import { VoiceTranscriptComponent } from '../';
 
 <template>
   <div class="container">
-    <VoiceTranscriptComponent apiEndpoint="http://localhost:3000/upload"/>
+    <VoiceTranscriptComponent apiEndpoint="ws://localhost:5000"/>
   </div>
 </template>
 
