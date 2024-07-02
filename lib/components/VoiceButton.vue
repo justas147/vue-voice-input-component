@@ -49,6 +49,10 @@ async function startRec() {
       language: props.language,
     }))
     socket.value.on('transcription', onMessageHandler)
+    socket.value.on('streamError', (error: any) => {
+      console.error('Error during stream:', error)
+      stopRec()
+    })
 
     const stream = await navigator.mediaDevices.getUserMedia(constraints)
     mediaStream.value = stream
