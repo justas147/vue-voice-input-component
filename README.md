@@ -110,3 +110,11 @@ Here are a few screenshots of the component added to a empty Vue app:
 ![button and transcript after recording](docs/recorded.png)
 
 Components have minimal styling that could be changed with custom classes. However, it will be updated in the future.
+
+## Testing
+
+Testing setup with docker compose:
+
+```bash
+docker-compose up
+```
