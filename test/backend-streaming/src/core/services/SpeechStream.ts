@@ -1,6 +1,5 @@
 import speech, { SpeechClient } from '@google-cloud/speech';
 import { google } from '@google-cloud/speech/build/protos/protos';
-import Long from 'long';
 import * as pumpify from 'pumpify';
 
 let speechClient: SpeechClient | null = null;
