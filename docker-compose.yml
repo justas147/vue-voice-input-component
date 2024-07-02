@@ -5,7 +5,7 @@ services:
       context: ./
       dockerfile: ./src/Dockerfile
     container_name: frontend
-    command: yarn dev
+    command: yarn run dev:docker
     ports:
       - "5173:5173"
 

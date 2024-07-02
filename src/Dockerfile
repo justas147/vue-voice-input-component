@@ -5,7 +5,6 @@ WORKDIR /usr/src/app
 COPY . .
 
 RUN npm ci
+RUN yarn build
 
 EXPOSE 5173
-
-RUN yarn build
