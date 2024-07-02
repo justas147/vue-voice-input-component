@@ -15,6 +15,7 @@ const props = defineProps({
   }) },
   blobType: { type: String, required: false, default: 'audio/webm;codecs=opus' },
   timeslice: { type: Number, required: false, default: 1000 },
+  language: { type: String, required: false, default: 'en-US' },
 });
 
 const socket = ref<any>(undefined)
@@ -43,13 +44,16 @@ async function startRec() {
     };
 
     socket.value = io(props.apiEndpoint)
-    socket.value.on('message', onMessageHandler)
+    socket.value.emit('startStream', JSON.stringify({
+      ...props.audioContraints,
+      language: props.language,
+    }))
+    socket.value.on('transcription', onMessageHandler)
 
     const stream = await navigator.mediaDevices.getUserMedia(constraints)
     mediaStream.value = stream
     mediaRecorder.value = new MediaRecorder(stream)
     mediaRecorder.value.ondataavailable = onDataAvailableHandler
-    mediaRecorder.value.onstop = onStopHandler
     mediaRecorder.value.start(props.timeslice)
 
     setTimeSliceLimit()
@@ -71,11 +75,18 @@ function stopRec() {
     throw new Error('MediaRecorder is not prepared or not recording')
   }
 
+  isRecordingRef.value = false
+
   try {
     mediaRecorder.value?.stop()
     mediaStream.value?.getTracks().forEach((track: MediaStreamTrack) => {
       track.stop()
     });
+
+    socket.value?.emit('endStream')
+    socket.value?.off('transcription')
+    socket.value?.off('audioChunk')
+    socket.value?.close()
   } catch (error) {
     console.error('Error during recording stop:', error)
     return
@@ -104,16 +115,10 @@ const onDataAvailableHandler = (event: BlobEvent) => {
   socket.value?.emit('audioChunk', event.data)
 }
 
-const onStopHandler = async (event: Event) => {
-  isRecordingRef.value = false
-
-  socket.value?.close()
+const onMessageHandler = (data: any) => {
+  socketData.value = socketData.value + data
+  console.log('Message from server:', data)
   emits('recordingStop', socketData.value)
-}
-
-const onMessageHandler = (event: MessageEvent) => {
-  socketData.value = socketData.value + event.data
-  console.log('Message from server:', event.data)
 }
 
 onMounted(async () => {

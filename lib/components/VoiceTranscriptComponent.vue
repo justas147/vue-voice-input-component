@@ -15,6 +15,7 @@ const props = defineProps({
     sampleRate: 16000,
   }) },
   blobType: { type: String, required: false, default: 'audio/webm;codecs=opus' },
+  language: { type: String, required: false, default: 'en-US' },
 
   // transcript props
   speed: { type: Number, required: false, default: 50 },
@@ -43,6 +44,7 @@ const clearTranscript = () => {
         :formDataTag="props.formDataTag"
         :audioContraints="props.audioContraints"
         :blobType="props.blobType"
+        :language="props.language"
         @recordingStart="clearTranscript"
         @recordingStop="getTranscript"
       />
