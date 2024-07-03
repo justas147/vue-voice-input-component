@@ -19,7 +19,7 @@ class SpeechToTextStream {
   startStream(request: any) {
     console.log('startStream: ' + request);
     this.audioInput = [];
-
+    const audioConfig = JSON.parse(request);
     try {
       if (!speechClient) {
         speechClient = new speech.SpeechClient();
@@ -28,8 +28,8 @@ class SpeechToTextStream {
       this.recognizeStream = speechClient.streamingRecognize({
         config: {
           encoding: 'WEBM_OPUS',
-          sampleRateHertz: request.sampleRate,
-          languageCode: request.language,
+          sampleRateHertz: audioConfig.sampleRate,
+          languageCode: audioConfig.language,
         },
         interimResults: true
       });

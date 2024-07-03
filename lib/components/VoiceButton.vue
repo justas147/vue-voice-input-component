@@ -25,7 +25,7 @@ const mediaStream = ref<MediaStream | null>(null)
 const mediaRecorder = ref<MediaRecorder | null>(null)
 const timesliceLimit = ref<number>(0)
 
-const emits = defineEmits(['recordingStop', 'recordingStart'])
+const emits = defineEmits(['recordingStop', 'recordingStart', 'transcriptUpdate'])
 
 const isRecording = () => isRecordingRef.value
 
@@ -62,6 +62,7 @@ async function startRec() {
 
     setTimeSliceLimit()
     isRecordingRef.value = true
+    socketData.value = ''
     
     emits('recordingStart')
   } catch (error) {
@@ -91,6 +92,7 @@ function stopRec() {
     socket.value?.off('transcription')
     socket.value?.off('audioChunk')
     socket.value?.close()
+    emits('recordingStop', socketData.value)
   } catch (error) {
     console.error('Error during recording stop:', error)
     return
@@ -121,8 +123,8 @@ const onDataAvailableHandler = (event: BlobEvent) => {
 
 const onMessageHandler = (data: any) => {
   socketData.value = socketData.value + data
-  console.log('Message from server:', data)
-  emits('recordingStop', socketData.value)
+  console.log('Message from server:', socketData.value)
+  emits('transcriptUpdate', { transcription: socketData.value })
 }
 
 onMounted(async () => {

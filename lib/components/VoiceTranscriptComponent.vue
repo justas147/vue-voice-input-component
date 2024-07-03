@@ -24,11 +24,16 @@ const props = defineProps({
 const voiceTranscript = ref<string>('')
 
 const getTranscript = (transcriptRespose: any) => {
+  console.log('Transcript updated:', transcriptRespose.transcription)
   voiceTranscript.value = transcriptRespose.transcription
 }
 
 const clearTranscript = () => {
   voiceTranscript.value = ''
+}
+
+const stopTranscript = () => {
+  console.log('Transcript stopped', voiceTranscript.value)
 }
 </script>
 
@@ -46,7 +51,8 @@ const clearTranscript = () => {
         :blobType="props.blobType"
         :language="props.language"
         @recordingStart="clearTranscript"
-        @recordingStop="getTranscript"
+        @recordingStop="stopTranscript"
+        @transcript-update="getTranscript"
       />
     </div>
     <VoiceTranscript
