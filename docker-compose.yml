@@ -15,7 +15,7 @@ services:
       dockerfile: ./docker/dev.Dockerfile
     container_name: backend-streaming
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS="/usr/src/app/key.json"
+      - GOOGLE_APPLICATION_CREDENTIALS=/usr/src/app/key.json
     command: yarn dev
     ports:
       - "5000:5000"

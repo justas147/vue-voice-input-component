@@ -66,12 +66,15 @@ class SpeechToTextStream {
 	}
 
   recieveAudioChunk(data: DataView) {
-    console.log('recieveAudioChunk', data.byteLength);
+    try {
+      this.audioInput.push(data);
 
-    this.audioInput.push(data);
-
-    if (this.recognizeStream) {
-      this.recognizeStream.write(data);
+      if (this.recognizeStream) {
+        this.recognizeStream.write(data);
+      }
+    } catch (error) {
+      console.error(error);
+      this.socket.emit('streamError', error);
     }
   }
   
